@@ -5,9 +5,12 @@
 	> Created Time: Tue 19 Apr 2016 03:16:10 PM CST
  ************************************************************************/
 #include"typeNode.h"
+#include "intercode.h"
 typedef struct Type_* Type;
 typedef struct FieldList_* FieldList;
 typedef struct Functype_* Functype;
+extern FieldList vartable[16384];
+extern Functype funtable[16384];
 
 struct Type_{
     enum{BASIC,ARRAY,STRUCTURE}kind;

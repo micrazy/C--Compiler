@@ -39,29 +39,46 @@ void init(){
     rtype->u.basic=0;//int
     fread->returnType=rtype;
     fread->param=NULL;
-    fread->next=NULL;
+    fread->hashnext=NULL;
 
     fwrite->name=(char *)malloc(8);
     strcpy(fwrite->name,"write");
     fwrite->line=0;
     fwrite->returnType=rtype;
-    fwrite->param=(FieldList)malloc(sizeof(FieldList_));
+    fwrite->param=(FieldList)malloc(sizeof(struct FieldList_));
     fwrite->param->name=(char *)malloc(sizeof(16));
     strcpy(fwrite->param->name,"write_param");
     fwrite->param->type=rtype;
     fwrite->param->next=NULL;
     fwrite->param->hashnext=NULL;
-    fread->next=NULL;
+    fread->hashnext=NULL;
+    
+    insertFun(fread);
+    insertFun(fwrite);
+
+   /*  for test
+    InterCode p=(InterCode)malloc(sizeof(struct InterCode_));
+    p->kind=ASSIGN;
+    Operand p1=(Operand)malloc(sizeof(struct Operand_));
+    Operand p2=(Operand)malloc(sizeof(struct Operand_));
+    p1->kind=VARIABLE;
+    p1->u.value=(char *)malloc(16);
+    strcpy(p1->u.value,"test");
+    p1->next=NULL;
+
+    p2->kind=CONSTANT;
+    p2->u.value=(char *)malloc(16);
+    strcpy(p2->u.value,"16");
+    p2->next=NULL;
+
+    p->u.assign.left=p1;
+    p->u.assign.right=p2;
+    
+    insertCode(p);
+    printCode("/home/lzc/Desktop/out.ir");
 
 
-
-
-
-
-
-
-
-
+*/ 
 
 
 
