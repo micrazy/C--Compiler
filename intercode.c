@@ -83,7 +83,6 @@ void printCode(char * path){
             case RETURN:
                 fputs("RETURN  ",fp);
                 printOp(p->u.oneop.op,fp);
-                fputs(":  ",fp);
                 break;
             case LABEL:
                 fputs("LABEL  ",fp);
@@ -174,6 +173,7 @@ void printOp(Operand op,FILE *fp){
             fputs("label",fp);
             sprintf(tmp,"%d",op->u.var_no);
             fputs(tmp,fp);
+            fputs("  :",fp);
             break;
         case VADDRESS:
             fputs("*",fp);

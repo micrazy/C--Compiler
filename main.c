@@ -22,7 +22,7 @@ int main(int argc,char** argv){
 			yyparse();
          //   fprintf(stderr,"%d",isError);
             if(isError==0){
-               // printTree(root,0);
+                printTree(root,0);
 
 			    cc(root,argv[2]);
             }

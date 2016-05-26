@@ -21,6 +21,23 @@ Operand newvar(char *name){
     return op;
 }
 
+
+void printO(Operand o){
+    printf("kind:%d\n",o->kind);
+    switch(o->kind){
+        case LABEL:case TEMPVAR:
+        printf("no:%d\n",o->u.var_no);
+        break;
+        case CONSTANT:case VARIABLE:
+        printf("value:%s\n",o->u.value);
+        break;
+        case TADDRESS:case VADDRESS:
+        printO(o->u.name);
+        break;
+    }
+
+}
+
 int typeSize(Type t){
     if(t->kind==0){
         return 4;//int only
@@ -147,14 +164,12 @@ void tStmtList(struct typeNode *node){
     struct typeNode *p=node->childNode;
     if(p==NULL)return;
     tStmt(p);
-
     tStmtList(p->brotherNode);
 }
 
 void tStmt(struct typeNode *node){
     if(node==NULL)return;
     struct typeNode *p=node->childNode;
-       // printf("%s",p->type);
     if(strcmp(p->type,"Exp")==0){
         //Exp SEMI
         tExp(p,NULL);
@@ -179,14 +194,75 @@ void tStmt(struct typeNode *node){
     else if(strcmp(p->type,"IF")==0){
         //IF LP Exp RP Stmt (ELSE Stmt)
         p=p->brotherNode->brotherNode;
+        Operand lb1=newlabel();
+        Operand lb2=newlabel();
+        tExp_Cond(p,lb1,lb2);
+        InterCode code1=(InterCode)malloc(sizeof(struct InterCode_));
+        code1->kind=LABEL;
+        code1->u.oneop.op=lb1;
+        insertCode(code1);
+        
+        p=p->brotherNode->brotherNode;
         tStmt(p);
-            //..
+
+        InterCode lb2code=(InterCode)malloc(sizeof(struct InterCode_));
+        lb2code->kind=LABEL;
+        lb2code->u.oneop.op=lb2;
+        if(p->brotherNode!=NULL){
+            Operand lb3=newlabel();
+
+            InterCode code2=malloc(sizeof(struct InterCode_));
+            code2->kind=LABEL_GOTO;
+            code2->u.oneop.op=lb3;
+            insertCode(code2);
+            insertCode(lb2code);
+
+            p=p->brotherNode->brotherNode;
+            tStmt(p);
+            InterCode lb3code=(InterCode)malloc(sizeof(struct InterCode_));
+            lb3code->kind=LABEL;
+            lb3code->u.oneop.op=lb3;
+            insertCode(lb3code);
+        }
+        else
+            insertCode(lb2code);
+
+        
+    
     }
     else if(strcmp(p->type,"WHILE")==0){
         //WHILE LP Exp RP Stmt
+        Operand lb1=newlabel();
+        Operand lb2=newlabel();
+        Operand lb3=newlabel();
+        
         p=p->brotherNode->brotherNode;
+        
+        InterCode lb1code=(InterCode)malloc(sizeof(struct InterCode_));
+        lb1code->kind=LABEL;
+        lb1code->u.oneop.op=lb1;
+
+        insertCode(lb1code);//label1
+
+        tExp_Cond(p,lb2,lb3);//code1
+
+        InterCode lb2code=(InterCode)malloc(sizeof(struct InterCode_));
+        lb2code->kind=LABEL;
+        lb2code->u.oneop.op=lb2;
+        insertCode(lb2code);//label2
+        
         p=p->brotherNode->brotherNode;
-        tStmt(p);
+        tStmt(p);//code2
+        InterCode gotolb=(InterCode)malloc(sizeof(struct InterCode_));
+        gotolb->kind=LABEL_GOTO;
+        gotolb->u.oneop.op=lb1;
+        insertCode(gotolb);
+    
+        InterCode lb3code=(InterCode)malloc(sizeof(struct InterCode_));
+        lb3code->kind=LABEL;
+        lb3code->u.oneop.op=lb3;
+        insertCode(lb3code);
+
     }
 }
 
@@ -215,10 +291,8 @@ void tExp(struct typeNode *node,Operand place){
             
             Operand right=newtemp();
             int temp_no=right->u.var_no;//for optim
-
             tExp(p1->brotherNode,right);
-            
-            if(right->kind==TEMPVAR&&right->u.var_no==temp_no&&(left->kind=TEMPVAR||left->kind==VARIABLE)){
+            if(right->kind==TEMPVAR&&right->u.var_no==temp_no&&(left->kind==TEMPVAR||left->kind==VARIABLE)){
                 memcpy(right,left,sizeof(struct Operand_));
             }
             else{
@@ -232,8 +306,9 @@ void tExp(struct typeNode *node,Operand place){
             code2->kind=ASSIGN;
             code2->u.assign.left=place;
             code2->u.assign.right=right;
-            if(place!=NULL)
+            if(place!=NULL){
                 insertCode(code2);
+            }
         }
         else if(strcmp(p1->type,"MUL")==0||strcmp(p1->type,"DIV")==0||\
                 strcmp(p1->type,"ADD")==0||strcmp(p1->type,"SUB")==0){
@@ -420,7 +495,7 @@ void tExp(struct typeNode *node,Operand place){
         else {
         //ID LP Args RP 
             Functype f=find_fun(p->text);
-            if(strcmp(p->brotherNode->brotherNode->text,"RP")==0){
+            if(strcmp(p->brotherNode->brotherNode->type,"RP")==0){
                 if(strcmp(f->name,"read")==0){
                 InterCode rpcode=(InterCode)malloc(sizeof(struct InterCode_));
                 rpcode->kind=READ;
@@ -554,9 +629,9 @@ void tDec(struct typeNode *node,int from){
     struct typeNode* p=node->childNode;
     tVarDec(p,from);
     //variable
-    FieldList f=find_var(p->text);
+    FieldList f=find_var(p->childNode->text);
     if(f==NULL){
-        printf("var %s not exists! @%d",p->text,__LINE__);
+        fprintf(stderr,"var %s not exists! ",p->text,__LINE__);
         return;
     }
     if(f->type->kind==1&&from==1){
@@ -594,9 +669,9 @@ void tDec(struct typeNode *node,int from){
 
 void tExp_Cond(struct typeNode * node ,Operand label_true,Operand label_false){
     struct typeNode* p=node->childNode;
-    if(strcmp(p->text,"Exp")==0){
+    if(strcmp(p->type,"Exp")==0){
         struct typeNode* p1=p->brotherNode;
-        if(strcmp(p1->text,"RELOP")==0){
+        if(strcmp(p1->type,"RELOP")==0){
             Operand t1=newtemp();
             Operand t2=newtemp();
             
@@ -616,7 +691,7 @@ void tExp_Cond(struct typeNode * node ,Operand label_true,Operand label_false){
             insertCode(gotolb);
             return ;
         }
-        else if(strcmp(p1->text,"AND")==0){
+        else if(strcmp(p1->type,"AND")==0){
             Operand lb1=newlabel();
 
             tExp_Cond(p,lb1,label_false);//code1
@@ -631,7 +706,7 @@ void tExp_Cond(struct typeNode * node ,Operand label_true,Operand label_false){
             return ;
        
         }
-        else if(strcmp(p1->text,"OR")==0){
+        else if(strcmp(p1->type,"OR")==0){
             Operand lb1=newlabel();
 
             tExp_Cond(p,label_true,lb1);//code1
@@ -645,7 +720,7 @@ void tExp_Cond(struct typeNode * node ,Operand label_true,Operand label_false){
             return ;
         }
     }
-    if(strcmp(p->text,"NOT")==0){
+    if(strcmp(p->type,"NOT")==0){
         tExp_Cond(p,label_false,label_true);
         return;
     }
