@@ -8,6 +8,7 @@
 #include<stdlib.h>
 #include<string.h>
 #include"cc.h"
+#include "gencode.h"
 FieldList vartable[16384];
 Functype funtable[16384];
 
@@ -209,10 +210,12 @@ int insertFun(Functype f){
 }
 
 /*************start cc***********************/
-void  cc(struct typeNode *root){
+void  cc(struct typeNode *root,char *path){
     init();
     Program(root);
     //printtable(vartable);
+    dd(root);
+    printCode(path);
 }
 
 

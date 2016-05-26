@@ -4,6 +4,8 @@
 	> Mail: micrazy@live.com 
 	> Created Time: Tue 19 Apr 2016 03:16:10 PM CST
  ************************************************************************/
+#ifndef __CC_H__
+#define __CC_H__
 #include"typeNode.h"
 #include "intercode.h"
 typedef struct Type_* Type;
@@ -38,11 +40,12 @@ struct Functype_{//record Func
 
 
 unsigned int hash_pjw(char *name);
-void cc(struct typeNode *root);
+void cc(struct typeNode *root,char *path);
 int insertVar(FieldList f);
 int insertFun(Functype f);
 int insertParam(FieldList f);
 FieldList find_var(char *name);
+Functype find_fun(char *name);
 void Program(struct typeNode *root);
 void ExtDefList(struct typeNode *node);
 void ExtDef(struct typeNode *node);
@@ -71,3 +74,4 @@ void printtable(FieldList f[]);
 void printNode(struct typeNode *node);
 void printParam(FieldList f);
 void printArgs(struct typeNode *node);
+#endif

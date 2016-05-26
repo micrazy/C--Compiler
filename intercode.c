@@ -5,6 +5,8 @@
 
 InterCode head=NULL;
 InterCode tail=NULL;
+int varcount=1;
+int labcount=1;
 
 void insertCode(InterCode c){
     c->prev=NULL;
@@ -159,13 +161,28 @@ void printOp(Operand op,FILE *fp){
         case VARIABLE:case FUNC:
             fputs(op->u.value,fp);
             break;
+        case TEMPVAR:
+            fputs("t",fp);
+            sprintf(tmp,"%d",op->u.var_no);
+            fputs(tmp,fp);
+            break;
         case CONSTANT:
             fputs("#",fp);
             fputs(op->u.value,fp);
             break;
-        case ADDRESS:
+        case LABEL:
+            fputs("label",fp);
+            sprintf(tmp,"%d",op->u.var_no);
+            fputs(tmp,fp);
+            break;
+        case VADDRESS:
             fputs("*",fp);
             fputs(op->u.name->u.value,fp);
+            break;
+        case TADDRESS:
+            fputs("*t",fp);
+            sprintf(tmp,"%d",op->u.name->u.var_no,fp);
+            fputs(tmp,fp);
             break;
     }
     fputs("  ",fp);

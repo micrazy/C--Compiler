@@ -11,10 +11,9 @@ extern void yyrestart();
 int main(int argc,char** argv){
 	int i=0;
 	if(argc>1){
-		for(i=1;i<argc;i++){
-			FILE* f=fopen(argv[i],"r");
+			FILE* f=fopen(argv[1],"r");
 			if(!f){ 
-				perror(argv[i]);
+				perror(argv[1]);
 				return 1;
 			}
 			yyrestart(f);
@@ -25,10 +24,9 @@ int main(int argc,char** argv){
             if(isError==0){
                // printTree(root,0);
 
-			    cc(root);
+			    cc(root,argv[2]);
             }
 			fclose(f);
-		} 
 	}
 	else{
 		printf("Stdin!");
