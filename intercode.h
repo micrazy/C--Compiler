@@ -39,14 +39,13 @@ void insertCode(InterCode c);
 void deleteCode(InterCode c);
 void printCode(char *path);
 void printOp(Operand op,FILE *fp);
-
-
-
 extern InterCode head;
 extern InterCode tail;
 extern int varcount;
 extern int labcount;
 
+
+void printObjCode(char *path);
 
 
 

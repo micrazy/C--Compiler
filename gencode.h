@@ -1,3 +1,7 @@
+#ifndef __GENCODE_H__
+#define __GENCODE_H__
+
+
 #include<stdio.h>
 #include<stdlib.h>
 #include<string.h>
@@ -20,3 +24,4 @@
  void tExp(struct typeNode *node,Operand o);
  void tExp_Cond();
  void tArgs();
+ #endif

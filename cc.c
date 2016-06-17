@@ -1,14 +1,5 @@
-/*************************************************************************
-> File Name: cc.c
-> Author: Micrazy
-> Mail: micrazy@live.com 
-> Created Time: Tue 19 Apr 2016 03:16:18 PM CST
-************************************************************************/
-#include<stdio.h>
-#include<stdlib.h>
-#include<string.h>
-#include"cc.h"
 #include "gencode.h"
+#include "reg.h"
 FieldList vartable[16384];
 Functype funtable[16384];
 
@@ -156,6 +147,7 @@ int insertVar(FieldList f){
     if(vartable[hashcode]==NULL){
         //var not defined
         vartable[hashcode]=f;
+        return 0;
     }
     else{
         FieldList p=vartable[hashcode];
@@ -210,12 +202,14 @@ int insertFun(Functype f){
 }
 
 /*************start cc***********************/
-void  cc(struct typeNode *root,char *path){
+void  cc(struct typeNode *root,char *path,char * path1){
     init();
     Program(root);
     //printtable(vartable);
     dd(root);
     printCode(path);
+    initReg();
+    printObjCode(path1);
 }
 
 
@@ -316,7 +310,9 @@ FieldList VarDec(struct typeNode* node,Type t,int from){
         f->next=f->hashnext=NULL;
        // printf("%s",f->name);
         //insert into hashtable
-        if(insertVar(f)==1){
+        int res=insertVar(f);
+        
+        if(res==1){
             if(from==0){
             printf("Error type 3 at Line %d: Redefined variable '%s'\n",f->line,f->name);
             free(f);
@@ -340,12 +336,26 @@ FieldList VarDec(struct typeNode* node,Type t,int from){
         tt->kind=ARRAY;
         tt->u.array.elem=t;
         tt->u.array.size=size;
-        FieldList f=VarDec(p,tt,from);
+
+        FieldList f=VarDec(p,t,from);
         if(f==NULL){
             free(tt);
             return NULL;
         }
+        else{
+
+            if(f->type->kind!=ARRAY){
+                f->type=tt;
+                return f;
+            }
+            Type ttt=f->type;
+            while(ttt->u.array.elem->kind==ARRAY){
+                ttt=ttt->u.array.elem;
+            }
+            ttt->u.array.elem=tt;
+        
         return f;
+        }
     }
 
 }
@@ -411,6 +421,7 @@ void Stmt(struct typeNode *node,Type t){
     }
     else if(strcmp(p->type,"RETURN")==0){
         //RETURN Exp SEMI
+
         p=p->brotherNode;
         Type exp_type=Exp(p);
         if(isEqual(exp_type,t)==-1){
@@ -541,7 +552,9 @@ Type Exp(struct typeNode *node){
                     printf("Error type 12 at Line %d:Array need an integer\n",p->line);
                     return NULL;
                 }
+                return t1->u.array.elem;
             }
+            
         }
         else if(strcmp(p1->type,"DOT")==0){
             Type t1=Exp(p);

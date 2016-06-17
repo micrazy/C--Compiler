@@ -32,7 +32,7 @@ void printO(Operand o){
         printf("value:%s\n",o->u.value);
         break;
         case TADDRESS:case VADDRESS:
-        printO(o->u.name);
+       // printO(o->u.name);
         break;
     }
 
@@ -210,7 +210,7 @@ void tStmt(struct typeNode *node){
         lb2code->u.oneop.op=lb2;
         if(p->brotherNode!=NULL){
             Operand lb3=newlabel();
-
+          //  printO(lb3);
             InterCode code2=malloc(sizeof(struct InterCode_));
             code2->kind=LABEL_GOTO;
             code2->u.oneop.op=lb3;
@@ -289,6 +289,7 @@ void tExp(struct typeNode *node,Operand place){
                 printf("i cann't trans structure!@%d\n",__LINE__);
             }
             
+            //printO(left);
             Operand right=newtemp();
             int temp_no=right->u.var_no;//for optim
             tExp(p1->brotherNode,right);
@@ -296,6 +297,7 @@ void tExp(struct typeNode *node,Operand place){
                 memcpy(right,left,sizeof(struct Operand_));
             }
             else{
+               // printf("qqq");
                 InterCode code1=malloc(sizeof(struct InterCode_));
                 code1->kind=ASSIGN;
                 code1->u.assign.left=left;
@@ -384,9 +386,12 @@ void tExp(struct typeNode *node,Operand place){
             Operand op1=newtemp();
             
             tExp(p,op1);
-            FieldList f1=find_var(p->text);
+            struct typeNode* tmp=p;
+            while(strcmp(tmp->type,"ID")!=0)
+                tmp=tmp->childNode;
+            FieldList f1=find_var(tmp->text);
             if(f1==NULL)
-                printf("VARIABLE not exists@%d",__LINE__);
+                fprintf(stderr,"VARIABLE not exists");
             //FieldList f2=find_var(p1->brotherNode->text);
             Operand op2=newtemp();
 
@@ -409,12 +414,15 @@ void tExp(struct typeNode *node,Operand place){
             Operand temp=newtemp();
             InterCode code1=(InterCode)malloc(sizeof(struct InterCode_));
             code1->kind=ADD;
-            if(f1->type->kind==0){
+           // printf("%d",f1->type->u.array.elem->kind);
+            if(f1->type->u.array.elem->kind==0){
+             //   printf("aaaaaa");
                 place->kind=TADDRESS;
                 place->u.name=temp;
                 code1->u.binop.result=temp;
             }
             else{
+               // printf("bbb");
                 code1->u.binop.result=place;
             }
             code1->u.binop.op1=op1;
@@ -506,7 +514,7 @@ void tExp(struct typeNode *node,Operand place){
                 }
                 else{
                     Operand funop=newvar(f->name);
-                    funop->kind=FUNCTION;
+                    funop->kind=FUNC;
                     InterCode cfcode=(InterCode)malloc(sizeof(struct InterCode_));
                     cfcode->kind=CALLFUNC;
                     cfcode->u.assign.left=place;
@@ -536,7 +544,7 @@ void tExp(struct typeNode *node,Operand place){
                         argsList=argsList->next;
                     }
                     Operand funop=newvar(f->name);
-                    funop->kind=FUNCTION;
+                    funop->kind=FUNC;
                     InterCode cfcode=(InterCode)malloc(sizeof(struct InterCode_));
                     cfcode->kind=CALLFUNC;
                     cfcode->u.assign.left=place;
@@ -629,7 +637,10 @@ void tDec(struct typeNode *node,int from){
     struct typeNode* p=node->childNode;
     tVarDec(p,from);
     //variable
-    FieldList f=find_var(p->childNode->text);
+    struct typeNode* tmp=p;
+    while(strcmp(tmp->type,"ID")!=0)
+        tmp=tmp->childNode;
+    FieldList f=find_var(tmp->text);
     if(f==NULL){
         fprintf(stderr,"var %s not exists! ",p->text,__LINE__);
         return;

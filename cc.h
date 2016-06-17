@@ -40,7 +40,7 @@ struct Functype_{//record Func
 
 
 unsigned int hash_pjw(char *name);
-void cc(struct typeNode *root,char *path);
+void cc(struct typeNode *root,char *path,char *path1);
 int insertVar(FieldList f);
 int insertFun(Functype f);
 int insertParam(FieldList f);
